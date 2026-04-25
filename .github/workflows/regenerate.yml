@@ -1,0 +1,45 @@
+name: Regenerate client from latest specification
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install generator
+        run: pip install openapi-python-client
+
+      - name: Regenerate client
+        run: ./scripts/generate.sh
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet tippiti/generated; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit regenerated client
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "tippiti-bot"
+          git config user.email "bot@tippiti.io"
+          git add tippiti/generated
+          git commit -m "Regenerate client from latest specification"
+          git push
