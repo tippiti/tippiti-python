@@ -39,7 +39,6 @@ def _get_kwargs(
     if not isinstance(body, Unset):
         _kwargs["json"] = body.to_dict()
 
-
     headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
